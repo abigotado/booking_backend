@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -45,8 +46,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void setAuthentication(HttpServletRequest request, String token) {
         try {
             var authentication = tokenService.parseAuthentication(token);
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (authentication instanceof UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken) {
+                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            }
         } catch (Exception ex) {
             log.debug("Failed to parse JWT token", ex);
             SecurityContextHolder.clearContext();

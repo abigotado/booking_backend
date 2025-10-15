@@ -5,12 +5,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import javax.crypto.SecretKey;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,8 +26,8 @@ public class JwtTokenService {
     }
 
     public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
-        Instant now = Instant.now();
-        Instant expiry = now.plusSeconds(jwtProperties.getValiditySeconds());
+        var now = java.time.Instant.now();
+        var expiry = now.plusSeconds(jwtProperties.getValiditySeconds());
 
         return Jwts.builder()
             .subject(username)
@@ -48,10 +47,8 @@ public class JwtTokenService {
             .getPayload();
 
         String username = claims.getSubject();
-        var roles = claims.get(SecurityConstants.ROLES_CLAIM, Collection.class);
+        Collection<String> roles = claims.get(SecurityConstants.ROLES_CLAIM, Collection.class);
         var authorities = roles == null ? java.util.List.<GrantedAuthority>of() : roles.stream()
-            .filter(String.class::isInstance)
-            .map(String.class::cast)
             .map(SimpleGrantedAuthority::new)
             .toList();
 
@@ -66,7 +63,7 @@ public class JwtTokenService {
             .getPayload();
     }
 
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
