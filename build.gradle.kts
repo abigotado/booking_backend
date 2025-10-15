@@ -7,6 +7,7 @@ ext["springBootVersion"] = "3.5.0"
 ext["springCloudVersion"] = "2024.0.0"
 ext["springCloudNetflixVersion"] = "4.2.0"
 ext["mapstructVersion"] = "1.5.5.Final"
+ext["openApiVersion"] = "2.6.0"
 
 subprojects {
     apply(plugin = "java")
