@@ -9,6 +9,9 @@ dependencies {
     implementation(project(":shared"))
     runtimeOnly("com.h2database:h2")
     implementation("org.mapstruct:mapstruct:${property("mapstructVersion")}")
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
+    annotationProcessor("org.mapstruct:mapstruct-processor:${property("mapstructVersion")}")
+    compileOnly("org.projectlombok:lombok:1.18.32")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
