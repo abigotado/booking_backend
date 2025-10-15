@@ -26,6 +26,7 @@ subprojects {
 
     dependencies {
         add("annotationProcessor", "org.projectlombok:lombok:1.18.32")
+        add("annotationProcessor", "org.springframework.boot:spring-boot-configuration-processor")
         add("compileOnly", "org.projectlombok:lombok:1.18.32")
     }
 
