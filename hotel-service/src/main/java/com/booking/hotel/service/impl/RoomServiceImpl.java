@@ -54,7 +54,6 @@ public class RoomServiceImpl implements RoomService {
         }
         Room room = roomMapper.toEntity(request);
         room.setHotel(hotel);
-        room.setTimesBooked(0L);
         roomRepository.save(room);
         return roomMapper.toResponse(room);
     }
@@ -125,8 +124,13 @@ public class RoomServiceImpl implements RoomService {
                 .createdAt(Instant.now())
                 .active(true)
                 .build());
+        boolean isNewLock = lock.getId() == null;
         lock.setActive(true);
         roomLockRepository.save(lock);
+        if (isNewLock) {
+            room.setTimesBooked(room.getTimesBooked() + 1);
+            roomRepository.save(room);
+        }
         log.info("Room {} locked for booking {}", roomId, request.bookingId());
         return new RoomAvailabilityResponse(true, roomId, room.getHotel().getId());
     }

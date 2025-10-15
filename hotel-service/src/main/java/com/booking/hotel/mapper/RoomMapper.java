@@ -11,14 +11,20 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface RoomMapper {
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "timesBooked", constant = "0L")
     @Mapping(target = "hotel", ignore = true)
     Room toEntity(RoomRequest request);
 
     @Mapping(target = "hotelId", source = "hotel.id")
     RoomResponse toResponse(Room room);
 
+    @Mapping(target = "roomId", source = "id")
+    @Mapping(target = "hotelId", source = "hotel.id")
     RoomRecommendationResponse toRecommendation(Room room);
 
     @Mapping(target = "hotel", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "timesBooked", ignore = true)
     void updateEntity(RoomRequest request, @MappingTarget Room room);
 }
