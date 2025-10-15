@@ -15,5 +15,9 @@ dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:${property("mapstructVersion")}")
     compileOnly("org.projectlombok:lombok:1.18.32")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${property("openApiVersion")}")
+    testCompileOnly("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor("org.mapstruct:mapstruct-processor:${property("mapstructVersion")}")
 }
 
