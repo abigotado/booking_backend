@@ -1,21 +1,18 @@
 plugins {
     id("io.spring.dependency-management") version "1.1.5"
     id("org.springframework.boot") version "3.5.0" apply false
-    id("java-library") apply false
 }
 
 ext["springCloudVersion"] = "2023.0.1"
 ext["mapstructVersion"] = "1.5.5.Final"
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
 subprojects {
     apply(plugin = "java")
     apply(plugin = "io.spring.dependency-management")
+
+    extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
+        toolchain.languageVersion.set(org.gradle.jvm.toolchain.JavaLanguageVersion.of(17))
+    }
 
     group = "com.booking"
     version = "0.0.1-SNAPSHOT"
