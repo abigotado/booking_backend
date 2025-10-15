@@ -18,6 +18,7 @@ spring:
       enabled: false
 
 spring.cloud.compatibility-verifier.enabled: false
+eureka.client.enabled: false
 
 logging:
   level:
@@ -26,5 +27,5 @@ logging:
 app:
   security:
     jwt:
-      secret: c2VjcmV0LWZvci1ib29raW5nLXRlc3Q=
+      secret: dGhpc0lzQVRlc3RTZWNyZXRXaXRoU3VmZmljaWVudExlbmd0aA==
       validity-seconds: 3600
