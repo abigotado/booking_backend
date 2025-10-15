@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+
+logging:
+  level:
+    root: INFO
+
+app:
+  security:
+    jwt:
+      secret: Z2F0ZXdheURvY2tlclNlY3JldA==
+      validity-seconds: 3600
