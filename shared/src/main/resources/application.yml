@@ -1,0 +1,4 @@
+logging:
+  pattern:
+    level: "%5p [corr:%X{correlationId}]"
+

@@ -4,18 +4,15 @@ import java.util.UUID;
 
 public final class CorrelationContext {
 
-    private static final ThreadLocal<String> CORRELATION_ID = new ThreadLocal<>();
+    public static final String MDC_KEY = "correlationId";
+
+    private static final ThreadLocal<String> CORRELATION_ID = ThreadLocal.withInitial(() -> UUID.randomUUID().toString());
 
     private CorrelationContext() {
     }
 
     public static String getCorrelationId() {
-        String id = CORRELATION_ID.get();
-        if (id == null) {
-            id = UUID.randomUUID().toString();
-            CORRELATION_ID.set(id);
-        }
-        return id;
+        return CORRELATION_ID.get();
     }
 
     public static void setCorrelationId(String correlationId) {
@@ -26,4 +23,4 @@ public final class CorrelationContext {
         CORRELATION_ID.remove();
     }
 }
-
+ 

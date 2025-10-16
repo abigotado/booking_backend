@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class CorrelationIdFilter extends OncePerRequestFilter {
@@ -25,8 +25,10 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
             String correlationId = resolveCorrelationId(request);
             CorrelationContext.setCorrelationId(correlationId);
             response.setHeader(HEADER_CORRELATION_ID, correlationId);
+            MDC.put(CorrelationContext.MDC_KEY, correlationId);
             filterChain.doFilter(request, response);
         } finally {
+            MDC.remove(CorrelationContext.MDC_KEY);
             CorrelationContext.clear();
         }
     }

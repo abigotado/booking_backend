@@ -62,7 +62,7 @@ public class BookingServiceImpl implements BookingService {
             .map(Booking::getId)
             .orElse(null);
         if (correlationBookingId != null) {
-            log.info("Idempotent booking request detected for user {} returning existing booking {}", userId, correlationBookingId);
+            log.info("Booking request is idempotent, return existing bookingId={} for userId={}", correlationBookingId, userId);
             Booking booking = bookingRepository.findById(correlationBookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found"));
             return bookingMapper.toResponse(booking);
@@ -96,10 +96,10 @@ public class BookingServiceImpl implements BookingService {
             }
             booking.setStatus(BookingStatus.CONFIRMED);
             bookingRepository.save(booking);
-            log.info("Booking {} confirmed", booking.getId());
+            log.info("Booking confirmed bookingId={} userId={} roomId={}", booking.getId(), userId, roomId);
             return bookingMapper.toResponse(booking);
         } catch (Exception ex) {
-            log.error("Failed to confirm booking {}. Triggering compensation.", booking.getId(), ex);
+            log.error("Booking confirmation failed bookingId={} userId={} roomId={}. Triggering compensation.", booking.getId(), userId, roomId, ex);
             booking.setStatus(BookingStatus.CANCELLED);
             bookingRepository.save(booking);
             releaseRoom(roomId, request, booking);
