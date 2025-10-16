@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class CorrelationIdFilter extends OncePerRequestFilter {

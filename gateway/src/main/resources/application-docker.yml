@@ -1,6 +1,14 @@
 spring:
+  autoconfigure:
+    exclude:
+      - com.booking.shared.security.SecurityAutoConfiguration
+  main:
+    web-application-type: reactive
   application:
     name: api-gateway
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
 server:
   port: 8080
