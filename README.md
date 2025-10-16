@@ -50,32 +50,39 @@ Swagger UI / OpenAPI для каждого сервиса
 - Gradle Wrapper (в репозитории)
 - (Опционально) Docker для контейнеризации
 
-## Быстрый старт
+## Быстрый старт (Docker)
 
-1. **Запустите Eureka Server**
+1. Убедитесь, что установлены Docker и Docker Compose.
+
+2. Соберите и запустите весь стек:
+
    ```bash
-   ./gradlew :eureka-server:bootRun
+   docker compose up -d --build
    ```
 
-2. **Запустите Hotel Service**
+3. Проверьте состояние контейнеров (опционально):
+
    ```bash
-   ./gradlew :hotel-service:bootRun
+   docker compose ps
    ```
 
-3. **Запустите Booking Service**
+4. Полезные URL после запуска:
+   - Eureka Dashboard: <http://localhost:8761>
+   - Gateway (внешний вход): <http://localhost:8080>
+   - Booking Service Swagger: <http://localhost:8081/swagger-ui.html>
+   - Hotel Service Swagger: <http://localhost:8082/swagger-ui.html>
+
+5. Для просмотра логов:
+
    ```bash
-   ./gradlew :booking-service:bootRun
+   docker compose logs -f
    ```
 
-4. **Запустите API Gateway**
-   ```bash
-   ./gradlew :gateway:bootRun
-   ```
+6. Остановить и удалить контейнеры:
 
-5. Откройте Swagger UI:
-   - Booking Service: http://localhost:8081/swagger-ui.html
-   - Hotel Service: http://localhost:8082/swagger-ui.html
-   - Gateway: публичные маршруты на http://localhost:8080
+   ```bash
+   docker compose down
+   ```
 
 ## Конфигурация
 
@@ -92,11 +99,13 @@ Swagger UI / OpenAPI для каждого сервиса
 ```
 
 Основной интеграционный тест:
+
 - `BookingSagaIntegrationTest` (booking-service) — проверка успешного сценария и компенсации с мокированным `HotelClient`.
 
 ## Основные API
 
 ### Booking Service
+
 - `POST /api/users/register` — регистрация пользователя (возвращает JWT).
 - `POST /api/users/auth` — аутентификация и выдача JWT.
 - `POST /api/bookings` — создание бронирования (с выбором конкретного номера или авто-подбором).
@@ -104,6 +113,7 @@ Swagger UI / OpenAPI для каждого сервиса
 - `DELETE /api/bookings/{id}` — отмена бронирования.
 
 ### Hotel Service
+
 - `POST /api/hotels` (ADMIN) — добавление отеля.
 - `POST /api/rooms` (ADMIN) — добавление номера.
 - `GET /api/rooms/recommend` — рекомендованные номера, отсортированные по `timesBooked`.
@@ -111,12 +121,12 @@ Swagger UI / OpenAPI для каждого сервиса
 - `POST /api/rooms/{id}/release` — компенсационное снятие блокировки (внутренний маршрут).
 
 ### Gateway
+
 - Проксирует `/api/bookings/**` и `/api/hotels/**`, передавая JWT в backend‑сервисы.
 
 ## Заметки по разработке
 
 - Для Lombok и MapStruct включено автогенерирование; в IDE (IntelliJ) убедитесь, что включена обработка аннотаций.
-- В тестах используется `@MockBean` (помечен как устаревший в будущих версиях Spring Boot); при обновлении стоит перейти на рекомендуемый API моков.
 - Совместимость Spring Boot/Cloud гарантирована за счёт фиксированных версий (`spring-cloud-starter-netflix-eureka-client:4.2.0`, `springdoc-openapi` и т.д.).
 
 ## Лицензия
