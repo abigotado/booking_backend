@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -61,4 +62,8 @@ public class RoomLock {
 
     @Column(name = "active", nullable = false)
     private boolean active;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 }

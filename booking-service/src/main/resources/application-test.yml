@@ -24,3 +24,10 @@ app:
     jwt:
       secret: c2VjcmV0LWZvci1ib29raW5nLXRlc3Q=
       validity-seconds: 3600
+  resilience:
+    failure-rate-threshold: 10
+    sliding-window-size: 2
+    minimum-number-of-calls: 2
+    permitted-calls-in-half-open-state: 1
+    wait-duration-in-open-state-ms: 1000
+    timeout-ms: 1000

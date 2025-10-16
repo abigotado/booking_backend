@@ -11,6 +11,9 @@ spring:
   h2:
     console:
       enabled: false
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
 server:
   port: 8082

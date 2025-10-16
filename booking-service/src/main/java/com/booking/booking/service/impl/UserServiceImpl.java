@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
             .role(UserRole.USER)
             .build();
         userRepository.save(user);
-        log.info("Registered new user: {}", user.getUsername());
+        log.info("Registered new user username={} role={}", user.getUsername(), user.getRole());
 
         String token = generateToken(user);
         return new AuthResponse(token, user.getRole());

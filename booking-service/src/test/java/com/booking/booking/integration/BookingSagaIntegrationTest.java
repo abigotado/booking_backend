@@ -1,10 +1,10 @@
 package com.booking.booking.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 import com.booking.booking.BookingServiceApplication;
 import com.booking.booking.client.HotelClient;
@@ -19,7 +19,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -31,6 +30,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest(classes = BookingServiceApplication.class)
 @ActiveProfiles("test")
 @TestPropertySource(properties = "spring.cloud.compatibility-verifier.enabled=false")
+@SuppressWarnings("removal")
 class BookingSagaIntegrationTest {
 
     @Autowired
@@ -87,10 +87,24 @@ class BookingSagaIntegrationTest {
         BookingRequest request = new BookingRequest(1L, 1L, LocalDate.now().plusDays(3),
             LocalDate.now().plusDays(4), false);
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> bookingService.createBooking(userId, request))
+        assertThatThrownBy(() -> bookingService.createBooking(userId, request))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Hotel service failure");
 
+        assertThat(bookingRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void createBooking_retriesBeforeFailing() {
+        given(hotelClient.confirmAvailability(eq(1L), any()))
+            .willThrow(new RuntimeException("temporary error"));
+
+        BookingRequest request = new BookingRequest(1L, 1L, LocalDate.now().plusDays(5),
+            LocalDate.now().plusDays(7), false);
+
+        assertThatThrownBy(() -> bookingService.createBooking(userId, request))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("temporary error");
         assertThat(bookingRepository.findAll()).isEmpty();
     }
 }

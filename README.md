@@ -4,7 +4,7 @@
 
 ## Обзор архитектуры
 
-```
+```bash
 +------------------+        +--------------------+        +-------------------+
 |  API Gateway     |<-----> |  Booking Service   |<-----> |  Hotel Service     |
 |  (Spring Cloud   |  JWT   |  (Бронирования,    |  Feign |  (Номера,          |
@@ -39,10 +39,11 @@ Swagger UI / OpenAPI для каждого сервиса
 - **Сага бронирования**: `BookingService` создаёт PENDING записи, вызывает подтверждение доступности номера, переводит статус в CONFIRMED либо CANCELLED с компенсацией.
 - **Идемпотентность**: `requestId` формируется из атрибутов бронирования, что предотвращает дубли; репозиторий проверяет пересечения броней.
 - **Балансировка нагрузки номеров**: `hotel-service` ведёт счётчик `timesBooked` и отдаёт рекомендации, упорядоченные по минимальной загрузке.
-- **JWT‑безопасность**: модуль `shared` предоставляет сервис токенов, фильтры и авто-конфигурацию; роли `USER` / `ADMIN` контролируются на уровне методов.
+- **JWT‑безопасность и проверка 401/403**: модуль `shared` предоставляет сервис токенов, фильтры и авто-конфигурацию; роли `USER` / `ADMIN` контролируются на уровне методов. Интеграционные тесты (`BookingSecurityIntegrationTest`, `GatewaySecurityIntegrationTest`) гарантируют корректные ответы 401/403.
 - **API Gateway**: маршрутизирует `/api/bookings/**` и `/api/hotels/**`, проксируя JWT к backend‑сервисам.
 - **OpenAPI**: у каждого сервиса доступен Swagger UI через `springdoc-openapi`.
-- **Интеграционные тесты**: `BookingSagaIntegrationTest` проверяет успешную обработку и компенсацию при сбоях внешнего сервиса.
+- **Интеграционные тесты**: `BookingSagaIntegrationTest` тестирует успешный сценарий и компенсацию; `RoomServiceConcurrencyTest` имитирует конкурентные бронирования; `BookingSecurityIntegrationTest` и `GatewaySecurityIntegrationTest` покрывают безопасность.
+- **Трассировка запросов**: `CorrelationIdFilter` формирует `X-Correlation-Id`, логирование бизнес-событий (`booking-service`, `hotel-service`) фиксирует `bookingId/userId/roomId`, что облегчает диагностику.
 
 ## Требования
 
@@ -94,13 +95,58 @@ Swagger UI / OpenAPI для каждого сервиса
 
 ## Тестирование
 
-```bash
+### Unit / Integration
+
+```
 ./gradlew clean test
 ```
 
-Основной интеграционный тест:
+- `BookingSagaIntegrationTest` — успешная сага и компенсация с моками HotelClient.
+- `BookingSecurityIntegrationTest`, `GatewaySecurityIntegrationTest` — проверки 401/403.
+- `RoomServiceConcurrencyTest` — конкурентный доступ к `RoomService`.
 
-- `BookingSagaIntegrationTest` (booking-service) — проверка успешного сценария и компенсации с мокированным `HotelClient`.
+### E2E (Docker)
+
+```
+docker compose up -d --build
+```
+
+1. Зарегистрируйте пользователя:
+
+   ```bash
+   curl -X POST http://localhost:8080/api/users/register \
+     -H "Content-Type: application/json" \
+     -d '{"username":"demo","password":"DemoPass123"}'
+   ```
+
+2. Получите токен:
+
+   ```bash
+   curl -X POST http://localhost:8080/api/users/auth \
+     -H "Content-Type: application/json" \
+     -d '{"username":"demo","password":"DemoPass123"}'
+   ```
+
+3. Создайте бронирование:
+
+   ```bash
+   curl -X POST http://localhost:8080/api/bookings \
+     -H "Authorization: Bearer <TOKEN>" \
+     -H "Content-Type: application/json" \
+     -d '{"hotelId":1,"roomId":1,"startDate":"2025-10-25","endDate":"2025-10-28","autoSelect":false}'
+   ```
+
+4. Посмотрите логи и корреляцию:
+
+   ```bash
+   docker compose logs gateway
+   ```
+
+5. Остановите окружение:
+
+   ```bash
+   docker compose down
+   ```
 
 ## Основные API
 
@@ -123,6 +169,13 @@ Swagger UI / OpenAPI для каждого сервиса
 ### Gateway
 
 - Проксирует `/api/bookings/**` и `/api/hotels/**`, передавая JWT в backend‑сервисы.
+
+## Архитектурные решения (ADR)
+
+- **Сага с компенсацией**: Booking Service после создания PENDING записи вызывает Hotel Service через Feign, подтверждает бронирование и при ошибке вызывает компенсацию (`releaseRoom`). Решение выбрано вместо двухфазного коммита для повышения отказоустойчивости и независимости сервисов.
+- **Идемпотентность запросов**: идентификатор `requestId` вычисляется детерминированно из параметров бронирования и хранится в базе. Повторный вызов возвращает существующий результат, что снижает риски дублей при повторных запросах клиента.
+- **Распределённая трассировка**: `shared` модуль предоставляет `CorrelationIdFilter`, который генерирует `X-Correlation-Id`. Все сервисы включают корреляционный идентификатор в логи и межсервисные вызовы, что упрощает диагностику.
+- **Security как библиотека**: общие компоненты JWT (фильтры, сервис токенов, обработчики ошибок) размещены в модуле `shared` и подключаются через авто-конфигурацию. Это исключает дублирование и унифицирует обработку безопасности.
 
 ## Заметки по разработке
 

@@ -14,6 +14,7 @@ public interface RoomMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "timesBooked", constant = "0L")
     @Mapping(target = "hotel", ignore = true)
+    @Mapping(target = "version", ignore = true)
     Room toEntity(RoomRequest request);
 
     @Mapping(target = "hotelId", source = "hotel.id")
@@ -26,5 +27,6 @@ public interface RoomMapper {
     @Mapping(target = "hotel", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "timesBooked", ignore = true)
+    @Mapping(target = "version", ignore = true)
     void updateEntity(RoomRequest request, @MappingTarget Room room);
 }

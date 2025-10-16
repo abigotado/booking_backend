@@ -1,45 +1,46 @@
 package com.booking.gateway.config;
 
-import com.booking.shared.security.JwtAccessDeniedHandler;
-import com.booking.shared.security.JwtAuthenticationEntryPoint;
-import com.booking.shared.security.JwtAuthenticationFilter;
+import com.booking.gateway.security.JwtReactiveAuthenticationManager;
+import com.booking.gateway.security.JwtServerAuthenticationConverter;
+import com.booking.shared.security.JwtTokenService;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
 
 @Configuration
-@EnableMethodSecurity
+@EnableReactiveMethodSecurity
+@ImportAutoConfiguration(exclude = SecurityAutoConfiguration.class)
+@EnableConfigurationProperties(com.booking.shared.security.JwtProperties.class)
 public class GatewaySecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
-    private final JwtAccessDeniedHandler accessDeniedHandler;
+    private final JwtTokenService jwtTokenService;
 
-    public GatewaySecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                                 JwtAuthenticationEntryPoint authenticationEntryPoint,
-                                 JwtAccessDeniedHandler accessDeniedHandler) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
+    public GatewaySecurityConfig(JwtTokenService jwtTokenService) {
+        this.jwtTokenService = jwtTokenService;
     }
 
     @Bean
-    public SecurityFilterChain gatewaySecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/actuator/**").permitAll()
-                .anyRequest().authenticated())
-            .exceptionHandling(handlers -> handlers
-                .authenticationEntryPoint(authenticationEntryPoint)
-                .accessDeniedHandler(accessDeniedHandler))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    public SecurityWebFilterChain gatewaySecurityFilterChain(ServerHttpSecurity http) {
+        ReactiveAuthenticationManager authenticationManager = new JwtReactiveAuthenticationManager(jwtTokenService);
 
-        return http.build();
+        return http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+            .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+            .oauth2ResourceServer(resourceServer -> resourceServer
+                .authenticationManagerResolver(context -> Mono.just(authenticationManager))
+                .bearerTokenConverter(new JwtServerAuthenticationConverter()))
+            .authorizeExchange(exchange -> exchange
+                .pathMatchers(HttpMethod.GET, "/actuator/**").permitAll()
+                .anyExchange().authenticated())
+            .build();
     }
 }
