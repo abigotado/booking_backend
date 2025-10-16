@@ -4,8 +4,10 @@ import com.booking.hotel.domain.entity.Room;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 
 public interface RoomRepository extends JpaRepository<Room, Long> {
 
@@ -19,4 +21,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     @Query("select r from Room r where r.availability = 'AVAILABLE' and r.id = :roomId")
     Optional<Room> findAvailableRoomById(@Param("roomId") Long roomId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Room r where r.availability = 'AVAILABLE' and r.id = :roomId")
+    Optional<Room> lockAvailableRoomById(@Param("roomId") Long roomId);
 }

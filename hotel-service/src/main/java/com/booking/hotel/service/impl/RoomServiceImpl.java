@@ -105,7 +105,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomAvailabilityResponse confirmAvailability(Long roomId, RoomAvailabilityRequest request) {
-        Room room = roomRepository.findAvailableRoomById(roomId)
+        Room room = roomRepository.lockAvailableRoomById(roomId)
             .orElseThrow(() -> new NotFoundException("Room not available"));
 
         if (!roomLockRepository.findActiveLocksForRoom(roomId, request.startDate(), request.endDate()).isEmpty()) {
